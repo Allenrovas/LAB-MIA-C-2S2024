@@ -1,10 +1,10 @@
 import React from "react";
 import Editor from "@monaco-editor/react";
-import "../styles/Editor.css";
+import "../Styles/Editor.css";
 
 function Consola(props){
     const handlerChangeEditor = (newValue, e) => {
-        props.setCodigo(newValue);
+        props.handlerChange(newValue);
     }
 
     return(
@@ -19,7 +19,7 @@ function Consola(props){
                 <Editor
                 height="50vh"
                 theme="vs-dark"
-                defaultLanguage="typescript"
+                defaultLanguage="bash"
                 value={props.value}
                 onChange={handlerChangeEditor}
                 options={{

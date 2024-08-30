@@ -8,7 +8,12 @@ const instance = axios.create({
     },
 });
 
-export const analisis = async (value) => {
-    const {data} = await instance.post('command/', {value});
-    return data;
-}
+export const analisis = async (peticion) => {
+    try {
+        const { data } = await instance.post('command/', { peticion });
+        return data;
+    } catch (error) {
+        console.error('Error during API call:', error);
+        throw error;
+    }
+};

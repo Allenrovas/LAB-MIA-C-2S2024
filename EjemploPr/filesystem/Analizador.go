@@ -64,6 +64,33 @@ func AnalizarComando(comando string) string {
 				//comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				//respuesta += AnalizarComando(comandoSeparadoString)
 				//return respuesta
+			} else if valor == "fdisk" {
+				fmt.Println("Comando fdisk")
+				respuesta += "Ejecutando fdisk\n"
+				//Analizar el comando fdisk
+				respuesta += AnalizarFdisk(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				respuesta += AnalizarComando(comandoSeparadoString)
+				return respuesta
+			} else if valor == "mount" {
+				fmt.Println("Ejecutando comando mount")
+				respuesta += "Ejecutando mount\n"
+				//Analizar Comando Mount
+				respuesta += analizarMount(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				respuesta += AnalizarComando(comandoSeparadoString)
+				return respuesta
+			} else if valor == "mkfs" {
+				fmt.Println("Ejecutando comando mkfs")
+				respuesta += "Ejecutando mkfs\n"
+				//Analizar Comando Mkfs
+				respuesta += analizarMkfs(&comandoSeparado)
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				respuesta += AnalizarComando(comandoSeparadoString)
+				return respuesta
 			} else if valor == "\n" {
 				continue
 			} else if valor == "\r" {
@@ -202,6 +229,294 @@ func AnalizarMkdisk(comando *[]string) string {
 		fmt.Println("Path: " + valorPath)
 		//Llamar a la funcion para crear el disco
 		respuesta += CrearDiscos(sizeInt, valorUnit, valorFit, valorPath)
+		return respuesta
+	}
+}
+
+// AnalizarFdisk recibe un comando fdisk y lo analiza
+func AnalizarFdisk(comando *[]string) string {
+	//fdisk -Size=300 -path=/home/Disco1.mia -name=Particion1
+	*comando = (*comando)[1:]
+	//respuesta
+	var respuesta string
+	//Booleanos para saber si se encontro el size, unit, fit, path
+	var size, unit, path, name, typePart, fit bool
+	//Variables para guardar el valor del size, unit, fit, path
+	var valorSize, valorUnit, valorFit, valorPath, valorName, valorTypePart string
+	valorFit = "f"
+	valorUnit = "k"
+	valorTypePart = "p"
+	//Iterar sobre el comando
+	for _, valor := range *comando {
+		//Obtener la bandera
+		bandera := obtenerBandera(valor)
+		//Obtener el valor de la bandera
+		banderaValor := obtenerValor(valor)
+		//Si la bandera es -size
+		if bandera == "-size" {
+			size = true
+			valorSize = banderaValor
+			*comando = (*comando)[1:]
+		} else if bandera == "-unit" {
+			unit = true
+			valorUnit = banderaValor
+			valorUnit = strings.ToLower(valorUnit)
+			*comando = (*comando)[1:]
+		} else if bandera == "-fit" {
+			fit = true
+			valorFit = banderaValor
+			valorFit = strings.ToLower(valorFit)
+			*comando = (*comando)[1:]
+		} else if bandera == "-name" {
+			name = true
+			valorName = banderaValor
+			*comando = (*comando)[1:]
+		} else if bandera == "-type" {
+			typePart = true
+			valorTypePart = banderaValor
+			valorTypePart = strings.ToLower(valorTypePart)
+			*comando = (*comando)[1:]
+		} else if bandera == "-path" {
+			path = true
+			//Verificar si el path tiene comillas
+			//-path="/home 1/mis discos/Disco3.mia"
+			if strings.Contains(banderaValor, "\"") {
+				//Eliminar las comillas del inicio
+				banderaValor = strings.Replace(banderaValor, "\"", "", -1)
+				//Eliminar el primer valor del comandoSeparado
+				*comando = (*comando)[1:]
+				//Iterar sobre el comando
+				Contador := 0
+				for _, valor := range *comando {
+					//Si el valor contiene comillas
+					if strings.Contains(valor, "\"") {
+						//Eliminar las comillas del final
+						valor = strings.Replace(valor, "\"", "", -1)
+						//Agregar el valor al path
+						valorPath += valor
+						break
+					} else {
+						//Agregar el valor al path
+						valorPath += valor + " "
+						Contador++
+					}
+				}
+				//Eliminar los valores del comando
+				*comando = (*comando)[Contador:]
+			} else {
+				valorPath = banderaValor
+				*comando = (*comando)[1:]
+			}
+		} else {
+			fmt.Println("Error: Parametro no reconocida")
+			respuesta += "Error: Parametro no reconocida\n"
+		}
+	}
+	//Obligatorios: name, path y size
+	if !name {
+		fmt.Println("Error: Falta el parametro name")
+		respuesta += "Error: Falta el parametro name\n"
+		return respuesta
+	} else if !path {
+		fmt.Println("Error: Falta el parametro path")
+		respuesta += "Error: Falta el parametro path\n"
+		return respuesta
+	} else if !size {
+		fmt.Println("Error: Falta el parametro size")
+		respuesta += "Error: Falta el parametro size\n"
+		return respuesta
+	} else {
+		//Opcionales: unit, fit, type
+		if fit {
+			if valorFit != "bf" && valorFit != "ff" && valorFit != "wf" {
+				fmt.Println("Error: Fit no reconocido")
+				respuesta += "Error: Fit no reconocido\n"
+				return respuesta
+			} else {
+				if valorFit == "bf" {
+					valorFit = "b"
+				} else if valorFit == "ff" {
+					valorFit = "f"
+				} else if valorFit == "wf" {
+					valorFit = "w"
+				}
+			}
+		}
+		if unit {
+			if valorUnit != "k" && valorUnit != "m" && valorUnit != "b" {
+				fmt.Println("Error: Unit no reconocido")
+				respuesta += "Error: Unit no reconocido\n"
+				return respuesta
+			}
+		}
+		if typePart {
+			if valorTypePart != "p" && valorTypePart != "e" && valorTypePart != "l" {
+				fmt.Println("Error: Type no reconocido")
+				respuesta += "Error: Type no reconocido\n"
+				return respuesta
+			}
+		}
+		//Pasar a int el size
+		sizeInt, err := strconv.Atoi(valorSize)
+		if err != nil {
+			fmt.Println("Error: Size no es un numero")
+			respuesta += "Error: Size no es un numero\n"
+			return respuesta
+		}
+		//Verificar que el size sea mayor a 0
+		if sizeInt <= 0 {
+			fmt.Println("Error: Size debe ser mayor a 0")
+			respuesta += "Error: Size debe ser mayor a 0\n"
+			return respuesta
+		}
+		//Imprimir los valores
+		fmt.Println("Size: " + valorSize)
+		fmt.Println("Unit: " + valorUnit)
+		fmt.Println("Fit: " + valorFit)
+		fmt.Println("Path: " + valorPath)
+		fmt.Println("Name: " + valorName)
+		fmt.Println("Type: " + valorTypePart)
+		//Llamar a la funcion para crear la particion
+		respuesta += Fdisk(sizeInt, valorUnit, valorFit, valorPath, valorName, valorTypePart)
+		return respuesta
+	}
+}
+
+func analizarMount(comandoSeparado *[]string) string {
+	//respuesta
+	var respuesta string
+	//mount -driveletter=A -name=Part1 #id=A118
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Booleanos para verificar si se ingresaron los parametros
+	var banderaPath, banderaName bool
+	//Variables para almacenar los valores de los parametros
+	var pathValor, nameValor string
+	//Iterar sobre el comando separado
+	for _, valor := range *comandoSeparado {
+		bandera := obtenerBandera(valor)
+		banderaValor := obtenerValor(valor)
+		if bandera == "-path" {
+			banderaPath = true
+			//Verificar si el path tiene comillas
+			//-path="/home 1/mis discos/Disco3.mia"
+			if strings.Contains(banderaValor, "\"") {
+				//Eliminar las comillas del inicio
+				banderaValor = strings.Replace(banderaValor, "\"", "", -1)
+				//Eliminar el primer valor del comandoSeparado
+				*comandoSeparado = (*comandoSeparado)[1:]
+				//Iterar sobre el comando
+				Contador := 0
+				for _, valor := range *comandoSeparado {
+					//Si el valor contiene comillas
+					if strings.Contains(valor, "\"") {
+						//Eliminar las comillas del final
+						valor = strings.Replace(valor, "\"", "", -1)
+						//Agregar el valor al path
+						pathValor += valor
+						break
+					} else {
+						//Agregar el valor al path
+						pathValor += valor + " "
+						Contador++
+					}
+				}
+				//Eliminar los valores del comando
+				*comandoSeparado = (*comandoSeparado)[Contador:]
+			} else {
+				pathValor = banderaValor
+				*comandoSeparado = (*comandoSeparado)[1:]
+			}
+		} else if bandera == "-name" {
+			banderaName = true
+			nameValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido: ", bandera)
+			respuesta += "Parametro no reconocido: " + bandera + "\n"
+		}
+	}
+	//Obligatorios: -driveletter, -name
+	//Verificar si se ingresaron los parametros obligatorios
+	if !banderaPath {
+		fmt.Println("El parametro -path es obligatorio")
+		respuesta += "El parametro -path es obligatorio\n"
+		return respuesta
+	} else if !banderaName {
+		fmt.Println("El parametro -name es obligatorio")
+		respuesta += "El parametro -name es obligatorio\n"
+		return respuesta
+	} else {
+		//Imprimir los valores de los parametros
+		fmt.Println("Driveletter: ", pathValor)
+		fmt.Println("Name: ", nameValor)
+		//Llamar a la funcion para montar la particion
+		respuesta += MountPartition(pathValor, nameValor)
+		return respuesta
+	}
+}
+
+func analizarMkfs(comandoSeparado *[]string) string {
+	// mkfs -type=full -id=B145 -fs=3fs
+	//respuesta
+	var respuesta string
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Booleanos para verificar si se ingresaron los parametros
+	var banderaType, banderaId, banderaFs bool
+	//Variables para almacenar los valores de los parametros
+	var typeValor, idValor, fsValor string
+	typeValor = "full"
+	fsValor = "2fs"
+	//Iterar sobre el comando separado
+	for _, valor := range *comandoSeparado {
+		bandera := obtenerBandera(valor)
+		banderaValor := obtenerValor(valor)
+		if bandera == "-type" {
+			banderaType = true
+			typeValor = banderaValor
+			typeValor = strings.ToLower(typeValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-id" {
+			banderaId = true
+			idValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-fs" {
+			banderaFs = true
+			fsValor = banderaValor
+			fsValor = strings.ToLower(fsValor)
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido: ", bandera)
+			respuesta += "Parametro no reconocido: " + bandera + "\n"
+		}
+	}
+	//Obligatorios: -id
+	//Verificar si se ingresaron los parametros obligatorios
+	if !banderaId {
+		fmt.Println("El parametro -id es obligatorio")
+		respuesta += "El parametro -id es obligatorio\n"
+		return respuesta
+	} else {
+		//Verificar si se ingresaron los parametros aceptados
+		if banderaType {
+			if typeValor != "full" {
+				fmt.Println("El valor del parametro -type no es valido")
+				respuesta += "El valor del parametro -type no es valido\n"
+				return respuesta
+			}
+		}
+		if banderaFs {
+			if fsValor != "2fs" && fsValor != "3fs" {
+				fmt.Println("El valor del parametro -fs no es valido")
+				respuesta += "El valor del parametro -fs no es valido\n"
+				return respuesta
+			}
+		}
+		//Imprimir los valores de los parametros
+		fmt.Println("Type: ", typeValor)
+		fmt.Println("Id: ", idValor)
+		fmt.Println("Fs: ", fsValor)
+		//Llamar a la funcion para formatear la particion
+		respuesta += Mkfs(typeValor, idValor, fsValor)
 		return respuesta
 	}
 }

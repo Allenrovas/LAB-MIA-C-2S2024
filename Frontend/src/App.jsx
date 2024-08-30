@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import { BrowserRouter, Navigate,Route, Routes } from 'react-router-dom' 
+import Index from './Pages/index'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -10,8 +10,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/reportes" element={<Reportes />} />
-        <Route path="*" element={<Navigate to="/" replace={true} />} exact={true} />
+        {/* <Route path="/reportes" element={<Reportes />} />
+         */}<Route path="*" element={<Navigate to="/" replace={true} />} exact={true} />
       </Routes>
     </BrowserRouter>
   )

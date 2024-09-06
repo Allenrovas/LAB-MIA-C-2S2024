@@ -69,16 +69,18 @@ func Crear2FS(sb SuperBlock, MountActual Mount, n int) string {
 	sb.S_free_blocks_count--
 	sb.S_free_inodes_count--
 
-	//Creacion del super bloque
+	//Creación del super bloque
 	//Abrir el archivo
-	file, err := os.OpenFile(MountActual.Path, os.O_WRONLY, 0644)
+
+	file, err := os.OpenFile(MountActual.Path, os.O_WRONLY, 0777)
 	if err != nil {
+		println("Error al abrir el archivo")
 		return "Error al abrir el archivo"
 	}
 	defer file.Close()
 
 	file.Seek(int64(MountActual.Start), 0)
-	binary.Write(file, binary.BigEndian, &sb)
+	binary.Write(file, binary.LittleEndian, &sb)
 
 	//Crear el bitmap de inodos
 	var llenar byte = 0
@@ -111,7 +113,7 @@ func Crear2FS(sb SuperBlock, MountActual Mount, n int) string {
 		binary.Write(file, binary.LittleEndian, &bloque0)
 	}
 
-	//Crear el directorio raiz
+	//Crear el directorio raíz
 	//Crear el inodo
 	inodo0.I_uid = 1
 	inodo0.I_gid = 1
@@ -125,6 +127,7 @@ func Crear2FS(sb SuperBlock, MountActual Mount, n int) string {
 	inodo0.I_block[0] = 0
 
 	//Crear el bloque carpeta
+
 	var bloqueCarpeta FolderBlock
 	bloqueCarpeta.B_content[0].B_inodo = 0
 	copy(bloqueCarpeta.B_content[0].B_name[:], ".")
@@ -142,21 +145,21 @@ func Crear2FS(sb SuperBlock, MountActual Mount, n int) string {
 	inodo1.I_uid = 1
 	inodo1.I_gid = 1
 	fechaActual = time.Now()
+	fecha = fechaActual.Format("2006-01-02 15:04:05")
 	copy(inodo1.I_atime[:], fecha)
 	copy(inodo1.I_ctime[:], fecha)
 	copy(inodo1.I_mtime[:], fecha)
 	inodo1.I_type = [1]byte{'1'}
 	inodo1.I_perm = 664
 	inodo1.I_block[0] = 1
-	inodo1.I_size = int32(len(data)) + int32(binary.Size(FolderBlock{}))
+	inodo1.I_size = int32(len(data)) + int32(binary.Size(Fileblock{}))
 
-	inodo0.I_size = int32(binary.Size(FolderBlock{})) + inodo1.I_size + int32(binary.Size(FolderBlock{}))
+	inodo0.I_size = inodo1.I_size + int32(binary.Size(FolderBlock{})) + int32(binary.Size(FolderBlock{}))
 
 	var bloqueArchivo Fileblock
 	copy(bloqueArchivo.B_content[:], data)
 
-	//Escrib ir el inodo en el archivo
-
+	//Escribir el inodo en el archivo
 	file.Seek(int64(sb.S_bm_inode_start), 0)
 	var bit byte = 1
 	binary.Write(file, binary.LittleEndian, &bit)
@@ -174,6 +177,7 @@ func Crear2FS(sb SuperBlock, MountActual Mount, n int) string {
 	binary.Write(file, binary.LittleEndian, &bloqueCarpeta)
 	binary.Write(file, binary.LittleEndian, &bloqueArchivo)
 
-	fmt.Println("Sistema de archivos 2FS creado con exito en el disco: " + MountActual.Id)
-	return "Sistema de archivos 2FS creado con exito en el disco: " + MountActual.Id
+	fmt.Println("Sistema de archivos 2FS creado con éxito en el disco: " + MountActual.Id)
+	return "Sistema de archivos 2FS creado con éxito en el disco: " + MountActual.Id
+
 }

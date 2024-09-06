@@ -410,7 +410,7 @@ func MountPartition(pathValor string, name string) string {
 		respuesta += "Particion montada correctamente " + name + " con id " + particionMontada.Id + "\n"
 
 		for i := 0; i < len(particionesMontadas); i++ {
-			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path + " Name: " + particionesMontadas[i].Name + " Part_type: " + string(particionesMontadas[i].Part_type[:]) + " Start: " + strconv.Itoa(int(particionesMontadas[i].Start)) + " Size: " + strconv.Itoa(int(particionesMontadas[i].Size)) + "\n"
+			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path
 		}
 
 		disk.Mbr_partition_1.Part_status = [1]byte{'1'}
@@ -468,7 +468,7 @@ func MountPartition(pathValor string, name string) string {
 		respuesta += "Particion montada correctamente " + name + " con id " + particionMontada.Id + "\n"
 
 		for i := 0; i < len(particionesMontadas); i++ {
-			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path + " Name: " + particionesMontadas[i].Name + " Part_type: " + string(particionesMontadas[i].Part_type[:]) + " Start: " + strconv.Itoa(int(particionesMontadas[i].Start)) + " Size: " + strconv.Itoa(int(particionesMontadas[i].Size)) + "\n"
+			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path
 		}
 		disk.Mbr_partition_2.Part_status = [1]byte{'1'}
 		disk.Mbr_partition_2.Part_correlative = int32(contador)
@@ -525,7 +525,7 @@ func MountPartition(pathValor string, name string) string {
 		respuesta += "Particion montada correctamente " + name + " con id " + particionMontada.Id + "\n"
 
 		for i := 0; i < len(particionesMontadas); i++ {
-			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path + " Name: " + particionesMontadas[i].Name + " Part_type: " + string(particionesMontadas[i].Part_type[:]) + " Start: " + strconv.Itoa(int(particionesMontadas[i].Start)) + " Size: " + strconv.Itoa(int(particionesMontadas[i].Size)) + "\n"
+			respuesta += "Id: " + particionesMontadas[i].Id
 		}
 		disk.Mbr_partition_3.Part_status = [1]byte{'1'}
 		disk.Mbr_partition_3.Part_correlative = int32(contador)
@@ -581,7 +581,7 @@ func MountPartition(pathValor string, name string) string {
 		respuesta += "Particion montada correctamente " + name + " con id " + particionMontada.Id + "\n"
 
 		for i := 0; i < len(particionesMontadas); i++ {
-			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path + " Name: " + particionesMontadas[i].Name + " Part_type: " + string(particionesMontadas[i].Part_type[:]) + " Start: " + strconv.Itoa(int(particionesMontadas[i].Start)) + " Size: " + strconv.Itoa(int(particionesMontadas[i].Size)) + "\n"
+			respuesta += "Id: " + particionesMontadas[i].Id + " Path: " + particionesMontadas[i].Path
 		}
 		disk.Mbr_partition_4.Part_status = [1]byte{'1'}
 		disk.Mbr_partition_4.Part_correlative = int32(contador)

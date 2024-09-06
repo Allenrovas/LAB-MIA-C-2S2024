@@ -50,7 +50,7 @@ func AnalizarComando(comando string) string {
 				fmt.Println("Comando mkdisk")
 				respuesta += "Ejecutando mkdisk\n"
 				//Analizar el comando mkdisk
-				respuesta += AnalizarMkdisk(&comandoSeparado)
+				respuesta += AnalizarMkdisk(&comandoSeparado) + "\n"
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				respuesta += AnalizarComando(comandoSeparadoString)
@@ -68,7 +68,7 @@ func AnalizarComando(comando string) string {
 				fmt.Println("Comando fdisk")
 				respuesta += "Ejecutando fdisk\n"
 				//Analizar el comando fdisk
-				respuesta += AnalizarFdisk(&comandoSeparado)
+				respuesta += AnalizarFdisk(&comandoSeparado) + "\n"
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				respuesta += AnalizarComando(comandoSeparadoString)
@@ -77,7 +77,7 @@ func AnalizarComando(comando string) string {
 				fmt.Println("Ejecutando comando mount")
 				respuesta += "Ejecutando mount\n"
 				//Analizar Comando Mount
-				respuesta += analizarMount(&comandoSeparado)
+				respuesta += analizarMount(&comandoSeparado) + "\n"
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				respuesta += AnalizarComando(comandoSeparadoString)
@@ -86,11 +86,29 @@ func AnalizarComando(comando string) string {
 				fmt.Println("Ejecutando comando mkfs")
 				respuesta += "Ejecutando mkfs\n"
 				//Analizar Comando Mkfs
-				respuesta += analizarMkfs(&comandoSeparado)
+				respuesta += analizarMkfs(&comandoSeparado) + "\n"
 				//Pasar a string el comando separado
 				comandoSeparadoString := strings.Join(comandoSeparado, " ")
 				respuesta += AnalizarComando(comandoSeparadoString)
 				return respuesta
+			} else if valor == "login" {
+				fmt.Println("Ejecutando comando login")
+				respuesta += "Ejecutando login\n"
+				//Analizar Comando Login
+				respuesta += analizarLogin(&comandoSeparado) + "\n"
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				respuesta += AnalizarComando(comandoSeparadoString)
+				return respuesta
+			} else if valor == "logout" {
+				fmt.Println("Ejecutando comando logout")
+				respuesta += "Ejecutando comando logout\n"
+				//Analizar el comando logout
+				respuesta += analizarLogout(&comandoSeparado) + "\n"
+				//Pasar a string el comando separado
+				comandoSeparadoString := strings.Join(comandoSeparado, " ")
+				respuesta += AnalizarComando(comandoSeparadoString)
+				return respuesta //Terminar la funcion
 			} else if valor == "\n" {
 				continue
 			} else if valor == "\r" {
@@ -519,6 +537,93 @@ func analizarMkfs(comandoSeparado *[]string) string {
 		respuesta += Mkfs(typeValor, idValor, fsValor)
 		return respuesta
 	}
+}
+
+func analizarLogin(comandoSeparado *[]string) string {
+	var respuesta string
+	//Eliminar el primer valor del comandoSeparado
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Booleanos para verificar si se ingreso el parametro obligatorio
+	var user, pwd, id bool
+	//Variables para guardar los valores de los parametros
+	var userValor, pwdValor, idValor string
+	//Recorrer el comandoSeparado
+	for _, valor := range *comandoSeparado {
+		bandera := obtenerBandera(valor)
+		banderaValor := obtenerValor(valor)
+		if bandera == "-user" {
+			if banderaValor[0] == '"' {
+				banderaValor = banderaValor[1:]
+				//Eliminar el primer valor del comandoSeparado
+				Contador := 0
+				*comandoSeparado = (*comandoSeparado)[1:]
+				for _, valor := range *comandoSeparado {
+					banderaValor += " " + valor
+					Contador++
+					//Eliminar \r y \n
+					if strings.Contains(valor, "\r") {
+						valor = strings.Replace(valor, "\r", "", -1)
+					}
+					if strings.Contains(valor, "\n") {
+						valor = strings.Replace(valor, "\n", "", -1)
+					}
+					if strings.Contains(valor, "\"") {
+						break
+					}
+				}
+				//Eliminar los valores que ya se analizaron
+				*comandoSeparado = (*comandoSeparado)[Contador-1:]
+				//Eliminar las comillas del final
+				banderaValor = strings.Replace(banderaValor, "\"", "", -1)
+			}
+			user = true
+			userValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+
+		} else if bandera == "-pass" {
+			pwd = true
+			pwdValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else if bandera == "-id" {
+			id = true
+			idValor = banderaValor
+			*comandoSeparado = (*comandoSeparado)[1:]
+		} else {
+			fmt.Println("Parametro no reconocido")
+			respuesta += "Parametro no reconocido\n"
+		}
+	}
+	//Verificar si se ingreso el parametro obligatorio
+	if !user {
+		fmt.Println("No se ingreso el parametro obligatorio user")
+		respuesta += "No se ingreso el parametro obligatorio user\n"
+		return respuesta
+	} else if !pwd {
+		fmt.Println("No se ingreso el parametro obligatorio pass")
+		respuesta += "No se ingreso el parametro obligatorio \n"
+		return respuesta
+	} else if !id {
+		fmt.Println("No se ingreso el parametro obligatorio id")
+		respuesta += "No se ingreso el parametro obligatorio id\n"
+		return respuesta
+	} else {
+		//Imprimir los valores y ejecutar el comando
+		fmt.Println("user: ", userValor)
+		fmt.Println("pass: ", pwdValor)
+		fmt.Println("id: ", idValor)
+		//Ejecutar el comando
+		respuesta += Login(userValor, pwdValor, idValor)
+		return respuesta
+	}
+}
+
+func analizarLogout(comandoSeparado *[]string) string {
+	var respuesta string
+	//Eliminar el primer valor del comandoSeparado
+	*comandoSeparado = (*comandoSeparado)[1:]
+	//Llamar a la funcion logout
+	respuesta += Logout()
+	return respuesta
 }
 
 func obtenerBandera(bandera string) string {

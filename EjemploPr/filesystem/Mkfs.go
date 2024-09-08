@@ -72,7 +72,7 @@ func Crear2FS(sb SuperBlock, MountActual Mount, n int) string {
 	//Creación del super bloque
 	//Abrir el archivo
 
-	file, err := os.OpenFile(MountActual.Path, os.O_WRONLY, 0777)
+	file, err := os.OpenFile(MountActual.Path, os.O_WRONLY, 0664)
 	if err != nil {
 		println("Error al abrir el archivo")
 		return "Error al abrir el archivo"

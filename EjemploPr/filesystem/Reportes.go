@@ -580,3 +580,259 @@ func ReporteFile(idValor string, pathValor string, rutaValor string) string {
 	}
 
 }
+
+func ReporteBMInode(id string, pathValor string) string {
+	var respuesta string
+
+	fileName := path.Base(pathValor)
+	dirPath := strings.TrimSuffix(pathValor, fileName)
+	fmt.Println("Nombre del archivo: " + fileName)
+	fmt.Println("Ruta del archivo: " + dirPath)
+	//Crear el directorio si no existe
+	err := os.MkdirAll(dirPath, 0664)
+	if err != nil {
+		respuesta += "Error al crear el directorio\n"
+		fmt.Println("Error al crear el directorio")
+		return respuesta
+	}
+
+	//Buscar la particion montada
+	indice := VerificarParticionMontada(id)
+	if indice == -1 {
+		respuesta += "La particion no esta montada"
+		return respuesta
+	}
+
+	MountActual := particionesMontadas[indice]
+	//Abrir el archivo
+	archivo, err := os.OpenFile(MountActual.Path, os.O_RDWR, 0664)
+	if err != nil {
+		respuesta += "Error al abrir el archivo\n"
+		fmt.Println("Error al abrir el archivo")
+		return respuesta
+	}
+	defer archivo.Close()
+	//Leer el superbloque
+	superBloque := NewSuperBlock()
+	archivo.Seek(int64(MountActual.Start), 0)
+	err = binary.Read(archivo, binary.LittleEndian, &superBloque)
+	if err != nil {
+		respuesta += "Error al leer el superbloque\n"
+		fmt.Println("Error al leer el superbloque")
+		return respuesta
+	}
+	//Leer el bitmap de inodos, teniendo 20 registros por fila
+	Desplazamiento := int(superBloque.S_bm_inode_start)
+	BmString := ""
+
+	for i := 0; i < int(superBloque.S_inodes_count); i++ {
+		var bit byte
+		archivo.Seek(int64(Desplazamiento+i), 0)
+		err = binary.Read(archivo, binary.LittleEndian, &bit)
+		if err != nil {
+			respuesta += "Error al leer el bitmap de inodos\n"
+			fmt.Println("Error al leer el bitmap de inodos")
+			return respuesta
+		}
+		if bit == 0 {
+			BmString += "0"
+		} else {
+			BmString += "1"
+		}
+		if (i+1)%20 == 0 {
+			BmString += "\n"
+		}
+	}
+	Dot := "digraph G{\n"
+	Dot += "a[shape=none, color=lightgrey, label=<\n<TABLE cellspacing=\"3\" cellpadding=\"2\" style=\"rounded\" >\n"
+	Dot += "<TR><TD bgcolor=\"lightgrey\">Bitmap de Inodos</TD></TR>\n"
+	Dot += "<TR><TD>" + BmString + "</TD></TR>\n"
+	Dot += "</TABLE>>];\n}"
+	//Crear el archivo dot
+	extension := path.Ext(pathValor)
+	if extension == ".txt" {
+		//Crear el archivo .txt
+		file, err := os.Create(pathValor)
+		if err != nil {
+			fmt.Println("Error al crear el archivo .txt")
+			respuesta += "Error al crear el archivo .txt\n"
+			return respuesta
+		}
+		defer file.Close()
+
+		//Escribir el archivo .txt
+		_, err = file.WriteString(BmString)
+		if err != nil {
+			fmt.Println("Error al escribir el archivo .txt")
+			respuesta += "Error al escribir el archivo .txt\n"
+			return respuesta
+		}
+		fmt.Println("Archivo .txt creado")
+		return "Reporte Bitmap de Inodos creado con exito\n"
+
+	} else {
+		//Archivo sin extension
+		fileName = strings.TrimSuffix(fileName, extension)
+		DotName := dirPath + fileName + ".dot"
+		//Crear el archivo .dot
+		file, err := os.Create(DotName)
+		if err != nil {
+			fmt.Println("Error al crear el archivo .dot")
+			respuesta += "Error al crear el archivo .dot\n"
+			return respuesta
+		}
+		defer file.Close()
+
+		//Escribir el archivo .dot
+		_, err = file.WriteString(Dot)
+		if err != nil {
+			fmt.Println("Error al escribir el archivo .dot")
+			respuesta += "Error al escribir el archivo .dot\n"
+			return respuesta
+		}
+		fmt.Println("Archivo .dot creado")
+
+		//Quitar el punto a la extension
+		extension = extension[1:]
+
+		//Crear el reporte
+		cmd := exec.Command("dot", "-T", extension, DotName, "-o", pathValor)
+		fmt.Println("dot -T " + extension + " " + DotName + " -o " + pathValor)
+		err = cmd.Run()
+		if err != nil {
+			fmt.Println("Error al crear el reporte")
+			respuesta += "Error al crear el reporte\n"
+			return respuesta
+		}
+
+		return "Reporte Bitmap de Inodos creado con exito\n"
+	}
+}
+
+func ReporteBMBlock(id string, pathValor string) string {
+	var respuesta string
+
+	fileName := path.Base(pathValor)
+	dirPath := strings.TrimSuffix(pathValor, fileName)
+	fmt.Println("Nombre del archivo: " + fileName)
+	fmt.Println("Ruta del archivo: " + dirPath)
+	//Crear el directorio si no existe
+	err := os.MkdirAll(dirPath, 0664)
+	if err != nil {
+		respuesta += "Error al crear el directorio\n"
+		fmt.Println("Error al crear el directorio")
+		return respuesta
+	}
+
+	//Buscar la particion montada
+	indice := VerificarParticionMontada(id)
+	if indice == -1 {
+		respuesta += "La particion no esta montada"
+		return respuesta
+	}
+
+	MountActual := particionesMontadas[indice]
+	//Abrir el archivo
+	archivo, err := os.OpenFile(MountActual.Path, os.O_RDWR, 0664)
+	if err != nil {
+		respuesta += "Error al abrir el archivo\n"
+		fmt.Println("Error al abrir el archivo")
+		return respuesta
+	}
+	defer archivo.Close()
+	//Leer el superbloque
+	superBloque := NewSuperBlock()
+	archivo.Seek(int64(MountActual.Start), 0)
+	err = binary.Read(archivo, binary.LittleEndian, &superBloque)
+	if err != nil {
+		respuesta += "Error al leer el superbloque\n"
+		fmt.Println("Error al leer el superbloque")
+		return respuesta
+	}
+	//Leer el bitmap de bloques, teniendo 20 registros por fila
+	Desplazamiento := int(superBloque.S_bm_block_start)
+	BmString := ""
+
+	for i := 0; i < int(superBloque.S_blocks_count); i++ {
+		var bit byte
+		archivo.Seek(int64(Desplazamiento+i), 0)
+		err = binary.Read(archivo, binary.LittleEndian, &bit)
+		if err != nil {
+			respuesta += "Error al leer el bitmap de bloques\n"
+			fmt.Println("Error al leer el bitmap de bloques")
+			return respuesta
+		}
+		if bit == 0 {
+			BmString += "0"
+		} else {
+			BmString += "1"
+		}
+		if (i+1)%20 == 0 {
+			BmString += "\n"
+		}
+	}
+	Dot := "digraph G{\n"
+	Dot += "a[shape=none, color=lightgrey, label=<\n<TABLE cellspacing=\"3\" cellpadding=\"2\" style=\"rounded\" >\n"
+	Dot += "<TR><TD bgcolor=\"lightgrey\">Bitmap de Bloques</TD></TR>\n"
+	Dot += "<TR><TD>" + BmString + "</TD></TR>\n"
+	Dot += "</TABLE>>];\n}"
+	//Crear el archivo dot
+	extension := path.Ext(pathValor)
+	if extension == ".txt" {
+		//Crear el archivo .txt
+		file, err := os.Create(pathValor)
+		if err != nil {
+			fmt.Println("Error al crear el archivo .txt")
+			respuesta += "Error al crear el archivo .txt\n"
+			return respuesta
+		}
+		defer file.Close()
+
+		//Escribir el archivo .txt
+		_, err = file.WriteString(BmString)
+		if err != nil {
+			fmt.Println("Error al escribir el archivo .txt")
+			respuesta += "Error al escribir el archivo .txt\n"
+			return respuesta
+		}
+		fmt.Println("Archivo .txt creado")
+		return "Reporte Bitmap de Bloques creado con exito\n"
+
+	} else {
+		//Archivo sin extension
+		fileName = strings.TrimSuffix(fileName, extension)
+		DotName := dirPath + fileName + ".dot"
+		//Crear el archivo .dot
+		file, err := os.Create(DotName)
+		if err != nil {
+			fmt.Println("Error al crear el archivo .dot")
+			respuesta += "Error al crear el archivo .dot\n"
+			return respuesta
+		}
+		defer file.Close()
+
+		//Escribir el archivo .dot
+		_, err = file.WriteString(Dot)
+		if err != nil {
+			fmt.Println("Error al escribir el archivo .dot")
+			respuesta += "Error al escribir el archivo .dot\n"
+			return respuesta
+		}
+		fmt.Println("Archivo .dot creado")
+
+		//Quitar el punto a la extension
+		extension = extension[1:]
+
+		//Crear el reporte
+		cmd := exec.Command("dot", "-T", extension, DotName, "-o", pathValor)
+		fmt.Println("dot -T " + extension + " " + DotName + " -o " + pathValor)
+		err = cmd.Run()
+		if err != nil {
+			fmt.Println("Error al crear el reporte")
+			respuesta += "Error al crear el reporte\n"
+			return respuesta
+		}
+
+		return "Reporte Bitmap de Bloques creado con exito\n"
+	}
+}

@@ -765,6 +765,22 @@ func AnalizarRep(comandoSeparado *[]string) string {
 			//Ejecutar el comando
 			respuesta += ReporteSB(idValor, pathValor)
 			return respuesta
+		} else if nameValor == "bm_inode" {
+			//Imprimir los valores y ejecutar el comando
+			fmt.Println("id: ", idValor)
+			fmt.Println("name: ", nameValor)
+			fmt.Println("path: ", pathValor)
+			//Ejecutar el comando
+			respuesta += ReporteBMInode(idValor, pathValor)
+			return respuesta
+		} else if nameValor == "bm_bloc" {
+			//Imprimir los valores y ejecutar el comando
+			fmt.Println("id: ", idValor)
+			fmt.Println("name: ", nameValor)
+			fmt.Println("path: ", pathValor)
+			//Ejecutar el comando
+			respuesta += ReporteBMBlock(idValor, pathValor)
+			return respuesta
 		} else {
 			fmt.Println("Los valores de name deben ser: disk, sb, tree o file")
 			respuesta += "Los valores de name deben ser: disk, sb, tree o file\n"
